@@ -105,7 +105,7 @@ class Pipeline:
             name=body["chat_id"],
             model=body["model"],
             input=body["messages"],
-            metadata={"interface": "open-webui"},
+            meadata={"interface": "open-webui"},
         )
 
         self.chat_traces[body["chat_id"]] = trace
@@ -116,8 +116,31 @@ class Pipeline:
     async def outlet(self, body: dict, user: Optional[dict] = None) -> dict:
         print(f"outlet:{__name__}")
         print(f"Received body: {body}")
-        if body["chat_id"] not in self.chat_generations or body["chat_id"] not in self.chat_traces:
+        
+        if "chat_id" not in body:
             return body
+        
+        if (
+            body["chat_id"] not in self.chat_generations
+            or body["chat_id"] not in self.chat_traces
+        ):
+            trace = self.langfuse.trace(
+                name=f"filter:{__name__}",
+                input=body,
+                user_id=user["email"],
+                metadata={"user_name": user["name"], "user_id": user["id"]},
+                session_id=body["chat_id"],
+            )
+
+            generation = trace.generation(
+                name=body["chat_id"],
+                model=body["model"],
+                input=body["messages"],
+                meadata={"interface": "open-webui"},
+            )
+
+            self.chat_traces[body["chat_id"]] = trace
+            self.chat_generations[body["chat_id"]] = generation
 
         trace = self.chat_traces[body["chat_id"]]
         generation = self.chat_generations[body["chat_id"]]
