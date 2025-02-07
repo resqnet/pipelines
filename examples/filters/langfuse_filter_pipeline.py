@@ -105,7 +105,7 @@ class Pipeline:
             name=body["chat_id"],
             model=body["model"],
             input=body["messages"],
-            meadata={"interface": "open-webui"},
+            metadata={"interface": "open-webui"},
         )
 
         self.chat_traces[body["chat_id"]] = trace
